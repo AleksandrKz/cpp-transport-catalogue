@@ -10,9 +10,6 @@
 #include "transport_catalogue.h"
 
 namespace output {
-
-
-
     class Reader {
     public:
         std::string_view RemoveSpaces(std::string_view s);
@@ -28,7 +25,8 @@ namespace output {
         std::vector<std::string> stop_names;
     };
 
-    void PrintStopInfo(std::string_view name_stop, TransportCatalogue& tc);
-    void PrintBusInfo(std::string_view name_bus, TransportCatalogue& tc);
+    void PrintStopInfo(std::string_view name_stop, TransportCatalogue& tc, std::ostream& out = std::cout);
+    void PrintBusInfo(std::string_view name_bus, TransportCatalogue& tc, std::ostream& out = std::cout);
 }
+
 

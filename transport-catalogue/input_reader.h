@@ -8,12 +8,11 @@
 #include <tuple>
 #include <unordered_map>
 
-
+#include "transport_catalogue.h"
 
 namespace input {
     struct Stop {
-        Stop(std::string stop_name, double latitude, double longitude, std::vector<std::pair<std::string, uint64_t>> real_distance_to_stop) : 
-            stop_name(std::move(stop_name)), latitude(latitude), longitude(longitude), real_distance_to_stop(std::move(real_distance_to_stop)) {}
+        Stop(std::string stop_name, double latitude, double longitude, std::vector<std::pair<std::string, uint64_t>> real_distance_to_stop);
         std::string stop_name = "";
         double latitude = 0;
         double longitude = 0;
@@ -21,7 +20,7 @@ namespace input {
     };
 
     struct Bus {
-        Bus(std::string bus_name, std::vector<std::string> routes, char routes_type) : bus_name(std::move(bus_name)), routes(std::move(routes)), routes_type(routes_type) {}
+        Bus(std::string bus_name, std::vector<std::string> routes, char routes_type);
         std::string bus_name = "";
         std::vector<std::string> routes;
         char routes_type;
@@ -33,9 +32,8 @@ namespace input {
         std::string_view RemoveSpaces(std::string_view s);
         void ParseStop(std::string_view str);
         void ParseBusRoute(std::string_view str);
-        void ParseBusName(std::string_view str);
         void ParseLine(std::string_view str);
-        void ReadData(std::istream& input);
+        void ReadData(std::istream& input, TransportCatalogue& tc);
 
         std::vector<Stop>& GetStops();
         std::vector<Bus>& GetRoutes();
@@ -47,4 +45,5 @@ namespace input {
         std::vector<std::string> buses_names;
     };
 }
+
 

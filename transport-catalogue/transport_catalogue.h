@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 #include <utility>
 #include <vector>
 #include <deque>
@@ -20,16 +18,14 @@ enum class RouteType {
 };
 
 struct Stop {
-    Stop(std::string stop_name, double latitude, double longitude)
-         : stop_name(std::move(stop_name)), latitude(latitude), longitude(longitude) {}
+    Stop(std::string stop_name, double latitude, double longitude);
     std::string stop_name = "";
     double latitude = 0;
     double longitude = 0;
 };
 
 struct Bus {
-    Bus(std::string bus_name, std::vector<const Stop*> routes, RouteType type, uint64_t stops_count, uint64_t unique_stops, double distance_geo, double distance_real)
-        : bus_name(std::move(bus_name)), routes(std::move(routes)), type(type), stops_count(stops_count), unique_stops(unique_stops), distance_geo(distance_geo), distance_real(distance_real) {}
+    Bus(std::string bus_name, std::vector<const Stop*> routes, RouteType type, uint64_t stops_count, uint64_t unique_stops, double distance_geo, double distance_real);
     std::string bus_name = "";
     std::vector<const Stop*> routes;
     RouteType type;
@@ -40,10 +36,7 @@ struct Bus {
 };
 
 struct DistanceHasher {
-    std::size_t operator()(std::pair<const Stop *, const Stop *> stop_par) const {
-        return (hasher_(stop_par.first) + hasher_(stop_par.second) );
-    }
-
+    std::size_t operator()(std::pair<const Stop *, const Stop *> stop_par) const;
     std::hash<const void*> hasher_;
 };
 
@@ -72,5 +65,6 @@ private:
     std::deque<Bus> buses;
     std::unordered_map<std::string_view, const Bus*> busname_to_bus;
     //-----------------------------------------------------------------------
-
 };
+
+

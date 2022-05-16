@@ -1,6 +1,26 @@
 #include "transport_catalogue.h"
 #include "geo.h"
 
+Stop::Stop(std::string stop_name, double latitude, double longitude)
+         : stop_name(std::move(stop_name)), 
+           latitude(latitude), 
+           longitude(longitude) {
+}
+
+Bus::Bus(std::string bus_name, std::vector<const Stop*> routes, RouteType type, uint64_t stops_count, uint64_t unique_stops, double distance_geo, double distance_real)
+        : bus_name(std::move(bus_name)), 
+          routes(std::move(routes)), 
+          type(type), 
+          stops_count(stops_count), 
+          unique_stops(unique_stops), 
+          distance_geo(distance_geo), 
+          distance_real(distance_real) {
+}
+
+std::size_t DistanceHasher::operator()(std::pair<const Stop *, const Stop *> stop_par) const {
+    return (hasher_(stop_par.first) + hasher_(stop_par.second) );
+}
+
 void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string> bus_routes, char route_type) {
     std::unordered_set<std::string_view> unique_stops;
     std::vector<const Stop*> routes;
@@ -106,3 +126,4 @@ uint64_t TransportCatalogue::GetRealDistance(std::pair<const Stop *, const Stop 
     }
     return 0;
 }
+

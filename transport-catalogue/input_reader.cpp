@@ -6,11 +6,25 @@
 
 using namespace input;
 
+input::Stop::Stop(std::string stop_name, double latitude, double longitude, std::vector<std::pair<std::string, uint64_t>> real_distance_to_stop) : 
+            stop_name(std::move(stop_name)),
+            latitude(latitude), 
+            longitude(longitude), 
+            real_distance_to_stop(std::move(real_distance_to_stop)) {
 
-std::vector<Stop>& Reader::GetStops() {
+}
+
+input::Bus::Bus(std::string bus_name, std::vector<std::string> routes, char routes_type) : 
+            bus_name(std::move(bus_name)), 
+            routes(std::move(routes)), 
+            routes_type(routes_type) {
+
+}
+
+std::vector<input::Stop>& Reader::GetStops() {
     return stops;
 }
-std::vector<Bus>& Reader::GetRoutes() {
+std::vector<input::Bus>& Reader::GetRoutes() {
     return buses_routes;
 }
 std::vector<std::string>& Reader::GetBuses() {
@@ -110,7 +124,7 @@ void Reader::ParseLine(std::string_view str) {
     }
 }
 
-void Reader::ReadData(std::istream& input) {
+void Reader::ReadData(std::istream& input, TransportCatalogue& tc) {
     uint64_t count_line;
     input >> count_line;
     input.ignore();
@@ -120,4 +134,19 @@ void Reader::ReadData(std::istream& input) {
         if(!line.empty())
             ParseLine(line);
     }
+
+    for(const auto& e : GetStops()) {
+        tc.AddStop(e.stop_name, e.latitude, e.longitude);
+    }
+
+    for(const auto& e : GetStops()) {
+        for (const auto& [name_stop, dist] : e.real_distance_to_stop) {
+            tc.AddRealDistance(e.stop_name, name_stop, dist);
+        }
+    }
+
+    for(const auto& e : GetRoutes()) {
+        tc.AddRoute(e.bus_name, e.routes, e.routes_type);
+    }
 }
+

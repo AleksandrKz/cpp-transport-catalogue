@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <stack>
 #include <iomanip>//setprecision
 
 using namespace output;
@@ -53,22 +52,25 @@ void Reader::ParseLine(std::string_view str, TransportCatalogue& tc) {
 }
 
 void Reader::ReadData(std::istream &input, TransportCatalogue& tc) {
+    uint64_t count_line;
+    input >> count_line;
+    input.ignore();
     std::string line;
-    std::getline(input, line);
-    if(!line.empty()) {
-        ParseLine(line, tc);
+    while (count_line--) {
+        std::getline(input, line);
+        if(!line.empty())
+            ParseLine(line, tc);
     }
-
 }
 
-void output::PrintStopInfo(std::string_view name_stop, TransportCatalogue& tc) {
+void output::PrintStopInfo(std::string_view name_stop, TransportCatalogue& tc, std::ostream& out) {
     const auto [name, routes] = tc.GetStopInfo(name_stop);
     if (name.empty()) {
-        std::cout << "Stop " << name_stop << ": not found" << std::endl;
+        out << "Stop " << name_stop << ": not found" << std::endl;
     } else if (routes.empty()) {
-        std::cout << "Stop " << name_stop << ": no buses" << std::endl;
+        out << "Stop " << name_stop << ": no buses" << std::endl;
     } else {
-        std::cout << "Stop " << name << ": buses ";
+        out << "Stop " << name << ": buses ";
         bool space = false;
         for (const auto bus : routes) {
             if (space) {
@@ -77,17 +79,23 @@ void output::PrintStopInfo(std::string_view name_stop, TransportCatalogue& tc) {
             std::cout << bus;
             space = true;
         }
-        std::cout << std::endl;
+        out << std::endl;
     }
 }
 
-void output::PrintBusInfo(std::string_view name_bus, TransportCatalogue& tc) {
+void output::PrintBusInfo(std::string_view name_bus, TransportCatalogue& tc, std::ostream& out) {
     const auto [route_name, stops_count, stops_unique, distance_real, curvature] = tc.GetBusRoteInfo(name_bus);
     if (route_name.empty()) {
-        std::cout << "Bus " << name_bus << ": not found" << std::endl;
+        out << "Bus " << name_bus << ": not found" << std::endl;
     } else {
-        std::cout << std::setprecision(6);
-        std::cout << "Bus " << route_name << ": " << stops_count << " stops on route, " << stops_unique << " unique stops, " << distance_real << " route length, " << curvature << " curvature" << std::endl;
+        out << std::setprecision(6);
+        out << "Bus " << route_name << ": "
+        << stops_count << " stops on route, "
+        << stops_unique << " unique stops, "
+        << distance_real << " route length, "
+        << curvature << " curvature"
+        << std::endl;
     }
 }
+
 
