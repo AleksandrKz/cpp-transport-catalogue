@@ -12,41 +12,9 @@
 #include <tuple>
 #include <functional>
 
-enum class RouteType {
-    DIRECT,
-    RING
-};
+#include "domain.h"
 
-struct StopInfo {
-    std::string_view stop_name;
-    std::set<std::string_view> buses_in_stop;
-};
-
-struct BusRouteInfo {
-    std::string name;
-    uint64_t stops_count;
-    uint64_t stops_unique;
-    double distance_real;
-    double curvature;
-};
-
-struct Stop {
-    Stop(const std::string& stop_name, double latitude, double longitude);
-    std::string stop_name = "";
-    double latitude = 0;
-    double longitude = 0;
-};
-
-struct Bus {
-    Bus(const std::string& bus_name, const std::vector<const Stop*>& routes, RouteType type, uint64_t stops_count, uint64_t unique_stops, double distance_geo, double distance_real);
-    std::string bus_name = "";
-    std::vector<const Stop*> routes;
-    RouteType type;
-    uint64_t stops_count = 0;
-    uint64_t unique_stops = 0;
-    double distance_geo = 0.;
-    double distance_real = 0.;
-};
+using namespace geo;
 
 struct DistanceHasher {
     std::size_t operator()(std::pair<const Stop *, const Stop *> stop_par) const;
@@ -56,13 +24,15 @@ struct DistanceHasher {
 class TransportCatalogue {
 public:
     void AddRealDistance(std::string_view from, std::string_view to, uint64_t distance);
-    void AddRoute(std::string bus_name, std::vector<std::string> bus_routes, char route_type);
+    void AddRoute(std::string bus_name, std::vector<std::string> bus_routes, bool is_roundtrip );
     void AddStop(std::string stop_name, double latitude, double longitude);
     const Bus* SearchRoute(std::string_view route_name) const;
     const Stop* SearchStop(std::string_view stop_name) const;
-    BusRouteInfo  GetBusRouteInfo(std::string_view route_name);
-    StopInfo GetStopInfo(std::string_view stop_name);
+    const BusRouteInfo  GetBusRouteInfo(std::string_view route_name) const;
+    const StopInfo GetStopInfo(std::string_view stop_name) const;
     uint64_t GetRealDistance(std::pair<const Stop *, const Stop *> stops_pair);
+
+    const std::deque<Bus>& GetBuses() const;
 
 private:
     //дорожное расстояние
@@ -78,6 +48,11 @@ private:
     std::deque<Bus> buses;
     std::unordered_map<std::string_view, const Bus*> busname_to_bus;
     //-----------------------------------------------------------------------
+
+    //статистика по маршрутам
+    //std::deque<BusStat> bus_stat;
+    //статистика по остановкам
+    //std::deque<BusPtr> stop_stat;
 };
 
 

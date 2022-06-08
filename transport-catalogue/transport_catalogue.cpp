@@ -1,27 +1,10 @@
 #include "transport_catalogue.h"
-#include "geo.h"
-
-Stop::Stop(const std::string& stop_name, double latitude, double longitude)
-         : stop_name(std::move(stop_name)), 
-           latitude(latitude), 
-           longitude(longitude) {
-}
-
-Bus::Bus(const std::string& bus_name, const std::vector<const Stop*>& routes, RouteType type, uint64_t stops_count, uint64_t unique_stops, double distance_geo, double distance_real)
-        : bus_name(std::move(bus_name)), 
-          routes(std::move(routes)), 
-          type(type), 
-          stops_count(stops_count), 
-          unique_stops(unique_stops), 
-          distance_geo(distance_geo), 
-          distance_real(distance_real) {
-}
 
 std::size_t DistanceHasher::operator()(std::pair<const Stop *, const Stop *> stop_par) const {
     return (hasher_(stop_par.first) + hasher_(stop_par.second) );
 }
 
-void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string> bus_routes, char route_type) {
+void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string> bus_routes, bool is_roundtrip) {
     std::unordered_set<std::string_view> unique_stops;
     std::vector<const Stop*> routes;
     for(const auto stop_name : bus_routes) {
@@ -29,9 +12,9 @@ void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string>
         unique_stops.insert(stop->stop_name);
         routes.push_back(stop);
     }
-    RouteType type = (route_type == '>') ? RouteType::RING : RouteType::DIRECT;
+    RouteType type = (is_roundtrip) ? RouteType::RING : RouteType::DIRECT;
     double distance_geo = 0.;
-    for(uint32_t i = 0; i < routes.size(); ++i){
+    for(size_t i = 0; i < routes.size(); ++i){
         if(i + 1 == routes.size()) break;
         distance_geo += ComputeDistance({routes[i]->latitude, routes[i]->longitude}, {routes[i+1]->latitude, routes[i+1]->longitude});
     }
@@ -40,7 +23,7 @@ void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string>
     }
 
     double distance_real = 0.;
-    for(uint32_t i = 0; i < routes.size(); ++i){
+    for(size_t i = 0; i < routes.size(); ++i){
         if(i + 1 == routes.size()) break;
         auto dist = GetRealDistance({stopname_to_stop[routes[i]->stop_name] , stopname_to_stop[routes[i+1]->stop_name]}) != 0 ?
             GetRealDistance({stopname_to_stop[routes[i]->stop_name] , stopname_to_stop[routes[i+1]->stop_name]}) : 
@@ -49,7 +32,7 @@ void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string>
     }
     //если маршрут прямой, то проходим ещё в обратную сторону
     if (type == RouteType::DIRECT) {
-        for(uint32_t i = 0; i < routes.size(); ++i){
+        for(size_t i = 0; i < routes.size(); ++i){
             if(i + 1 == routes.size()) break;
             auto dist = GetRealDistance({stopname_to_stop[routes[i+1]->stop_name] , stopname_to_stop[routes[i]->stop_name]}) != 0 ?
                 GetRealDistance({stopname_to_stop[routes[i+1]->stop_name] , stopname_to_stop[routes[i]->stop_name]}) : 
@@ -82,7 +65,7 @@ const Stop* TransportCatalogue::SearchStop(std::string_view stop_name) const {
     return nullptr;
 }
 
-BusRouteInfo TransportCatalogue::GetBusRouteInfo(std::string_view route_name) {
+const BusRouteInfo TransportCatalogue::GetBusRouteInfo(std::string_view route_name) const {
     const Bus* route = SearchRoute(route_name);
     if(!route) {
         return {"" , 0 , 0 , 0, 0.};
@@ -96,7 +79,7 @@ BusRouteInfo TransportCatalogue::GetBusRouteInfo(std::string_view route_name) {
     return { name, stops_count, stops_unique, distance_real, curvature};
 }
 
-StopInfo TransportCatalogue::GetStopInfo(std::string_view stop_name) {
+const StopInfo TransportCatalogue::GetStopInfo(std::string_view stop_name) const {
     std::set<std::string_view> buses_in_stop;
 
     if (!SearchStop(stop_name)) {
@@ -127,3 +110,6 @@ uint64_t TransportCatalogue::GetRealDistance(std::pair<const Stop *, const Stop 
     return 0;
 }
 
+const std::deque<Bus>& TransportCatalogue::GetBuses() const {
+    return buses;
+}
