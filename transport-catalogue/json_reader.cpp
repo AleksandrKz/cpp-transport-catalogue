@@ -25,39 +25,39 @@ std::vector<ReaderJson::Bus> Reader::GetBuses() {
 void Reader::ParseRendererSettigs(const Node& n) {
     renderer::RenderSettings rs;
     
-    rs.width = n.AsMap().at("width").AsDouble();
-    rs.height = n.AsMap().at("height").AsDouble();
-    rs.padding = n.AsMap().at("padding").AsDouble();
-    rs.line_width = n.AsMap().at("line_width").AsDouble();
-    rs.stop_radius = n.AsMap().at("stop_radius").AsDouble();
-    rs.bus_label_font_size = n.AsMap().at("bus_label_font_size").AsInt();
-    rs.bus_label_offset.x = n.AsMap().at("bus_label_offset").AsArray()[0].AsDouble();
-    rs.bus_label_offset.y = n.AsMap().at("bus_label_offset").AsArray()[1].AsDouble();
-    rs.stop_label_font_size = n.AsMap().at("stop_label_font_size").AsInt();
-    rs.stop_label_offset.x = n.AsMap().at("stop_label_offset").AsArray()[0].AsDouble();
-    rs.stop_label_offset.y = n.AsMap().at("stop_label_offset").AsArray()[1].AsDouble();
-    if (n.AsMap().at("underlayer_color").IsString()) {
-        rs.underlayer_color = n.AsMap().at("underlayer_color").AsString();
+    rs.width = n.AsDict().at("width").AsDouble();
+    rs.height = n.AsDict().at("height").AsDouble();
+    rs.padding = n.AsDict().at("padding").AsDouble();
+    rs.line_width = n.AsDict().at("line_width").AsDouble();
+    rs.stop_radius = n.AsDict().at("stop_radius").AsDouble();
+    rs.bus_label_font_size = n.AsDict().at("bus_label_font_size").AsInt();
+    rs.bus_label_offset.x = n.AsDict().at("bus_label_offset").AsArray()[0].AsDouble();
+    rs.bus_label_offset.y = n.AsDict().at("bus_label_offset").AsArray()[1].AsDouble();
+    rs.stop_label_font_size = n.AsDict().at("stop_label_font_size").AsInt();
+    rs.stop_label_offset.x = n.AsDict().at("stop_label_offset").AsArray()[0].AsDouble();
+    rs.stop_label_offset.y = n.AsDict().at("stop_label_offset").AsArray()[1].AsDouble();
+    if (n.AsDict().at("underlayer_color").IsString()) {
+        rs.underlayer_color = n.AsDict().at("underlayer_color").AsString();
     }
-    else if (n.AsMap().at("underlayer_color").IsArray()) {
-        if (n.AsMap().at("underlayer_color").AsArray().size() == 3) {
-            uint8_t r = n.AsMap().at("underlayer_color").AsArray()[0].AsInt();
-            uint8_t g = n.AsMap().at("underlayer_color").AsArray()[1].AsInt();
-            uint8_t b = n.AsMap().at("underlayer_color").AsArray()[2].AsInt();
+    else if (n.AsDict().at("underlayer_color").IsArray()) {
+        if (n.AsDict().at("underlayer_color").AsArray().size() == 3) {
+            uint8_t r = n.AsDict().at("underlayer_color").AsArray()[0].AsInt();
+            uint8_t g = n.AsDict().at("underlayer_color").AsArray()[1].AsInt();
+            uint8_t b = n.AsDict().at("underlayer_color").AsArray()[2].AsInt();
             rs.underlayer_color = svg::Color(svg::Rgb(r, g, b));
         }
         else {
-            uint8_t r = n.AsMap().at("underlayer_color").AsArray()[0].AsInt();
-            uint8_t g = n.AsMap().at("underlayer_color").AsArray()[1].AsInt();
-            uint8_t b = n.AsMap().at("underlayer_color").AsArray()[2].AsInt();
-            double a = n.AsMap().at("underlayer_color").AsArray()[3].AsDouble();
+            uint8_t r = n.AsDict().at("underlayer_color").AsArray()[0].AsInt();
+            uint8_t g = n.AsDict().at("underlayer_color").AsArray()[1].AsInt();
+            uint8_t b = n.AsDict().at("underlayer_color").AsArray()[2].AsInt();
+            double a = n.AsDict().at("underlayer_color").AsArray()[3].AsDouble();
             rs.underlayer_color = svg::Color(svg::Rgba(r, g, b, a));
         }
     }
 
-    rs.underlayer_width = n.AsMap().at("underlayer_width").AsDouble();
+    rs.underlayer_width = n.AsDict().at("underlayer_width").AsDouble();
 
-    for (const auto col : n.AsMap().at("color_palette").AsArray()) {
+    for (const auto& col : n.AsDict().at("color_palette").AsArray()) {
         if (col.IsString()) {
             rs.color_palette.push_back(svg::Color(col.AsString()));
         }
@@ -83,32 +83,32 @@ void Reader::ParseRendererSettigs(const Node& n) {
 
 void Reader::ParseStatRequest(const Node& n) {
     for (const auto& node : n.AsArray()) {
-        if (node.AsMap().at("type").AsString() == "Stop") {
-            rh_.AddToRequest({"Stop", node.AsMap().at("name").AsString(), node.AsMap().at("id").AsInt()});
-        } else if (node.AsMap().at("type").AsString() == "Bus") {
-            rh_.AddToRequest({ "Bus", node.AsMap().at("name").AsString(), node.AsMap().at("id").AsInt() });
-        } else if (node.AsMap().at("type").AsString() == "Map") {
-            rh_.AddToRequest({ "Map", "", node.AsMap().at("id").AsInt() });
+        if (node.AsDict().at("type").AsString() == "Stop") {
+            rh_.AddToRequest({"Stop", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt()});
+        } else if (node.AsDict().at("type").AsString() == "Bus") {
+            rh_.AddToRequest({ "Bus", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt() });
+        } else if (node.AsDict().at("type").AsString() == "Map") {
+            rh_.AddToRequest({ "Map", "", node.AsDict().at("id").AsInt() });
         }
     }
 }
 
 void Reader::ParseStop(const Node& n) {
-    std::string stop_name = n.AsMap().at("name").AsString();
-    double latitude = n.AsMap().at("latitude").AsDouble();
-    double longitude = n.AsMap().at("longitude").AsDouble();
+    std::string stop_name = n.AsDict().at("name").AsString();
+    double latitude = n.AsDict().at("latitude").AsDouble();
+    double longitude = n.AsDict().at("longitude").AsDouble();
     std::vector<std::pair<std::string, uint64_t>> real_distance;
-    for (const auto& [name_stop, road_dist] : n.AsMap().at("road_distances").AsMap()) {
+    for (const auto& [name_stop, road_dist] : n.AsDict().at("road_distances").AsDict()) {
         real_distance.push_back({name_stop, road_dist.AsInt()});
     }
     stops_.push_back(ReaderJson::Stop(stop_name, latitude, longitude, real_distance));
 }
 
 void Reader::ParseBusRoute(const Node& n) {
-    std::string bus_rotute = n.AsMap().at("name").AsString();;
-    bool is_roundtrip = n.AsMap().at("is_roundtrip").AsBool();
+    std::string bus_rotute = n.AsDict().at("name").AsString();;
+    bool is_roundtrip = n.AsDict().at("is_roundtrip").AsBool();
     std::vector<std::string> stops;
-    for (const auto& stop : n.AsMap().at("stops").AsArray()) {
+    for (const auto& stop : n.AsDict().at("stops").AsArray()) {
         stops.push_back(stop.AsString());
     }
     buses_routes_.push_back(Bus(bus_rotute, stops, is_roundtrip));
@@ -120,7 +120,7 @@ void Reader::ReadData(std::istream& input) {
     Node base_requests;
     Node stat_requests;
     Node render_settings;
-    for (const auto& [key, node] : data.AsMap()) {
+    for (const auto& [key, node] : data.AsDict()) {
         if (key == "base_requests") {
             base_requests = node;
         }
@@ -138,9 +138,9 @@ void Reader::ReadData(std::istream& input) {
 
     //собираем данные 
     for (const auto& node : base_requests.AsArray()) {
-        if (node.AsMap().at("type").AsString() == "Stop") {
+        if (node.AsDict().at("type").AsString() == "Stop") {
             ParseStop(node);
-        } else if (node.AsMap().at("type").AsString() == "Bus") {
+        } else if (node.AsDict().at("type").AsString() == "Bus") {
             ParseBusRoute(node);
         }
     }

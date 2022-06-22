@@ -7,7 +7,7 @@ std::size_t DistanceHasher::operator()(std::pair<const Stop *, const Stop *> sto
 void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string> bus_routes, bool is_roundtrip) {
     std::unordered_set<std::string_view> unique_stops;
     std::vector<const Stop*> routes;
-    for(const auto stop_name : bus_routes) {
+    for(const auto& stop_name : bus_routes) {
         const Stop* stop = stopname_to_stop.at(stop_name);
         unique_stops.insert(stop->stop_name);
         routes.push_back(stop);

@@ -222,11 +222,21 @@ void RendererMap::ParseOut(const std::deque<Bus>& routes) {
     }
 }
 
-json::Document RendererMap::GetMap(const std::deque<Bus>& routes) {
-    std::stringstream ss , to_node;
+json::Document RendererMap::GetMap(const std::deque<Bus>& routes, int id) {
+    using namespace std::literals;
+    std::stringstream ss;//, to_node;
     ParseOut(routes);
-    to_node << "\"";
+    //to_node << "\"";
     doc_.Render(ss);
+    return json::Document{
+            json::Builder{}
+            .StartDict()
+            .Key("request_id"s).Value(id)
+            .Key("map"s).Value(ss.str())
+            .EndDict()
+            .Build()
+    };
+    /*
     for (const auto ch : ss.str()) {
         switch (ch) {
         case '\"':
@@ -251,6 +261,7 @@ json::Document RendererMap::GetMap(const std::deque<Bus>& routes) {
     to_node << "\"";
     json::Document doc = json::Load(to_node);
     return doc;
+    */
 }
 
 void RendererMap::PrintMap(const std::deque<Bus>& routes) {

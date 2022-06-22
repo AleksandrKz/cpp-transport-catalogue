@@ -27,53 +27,110 @@ void RequestHandler::PrintStat() {
 }
 
 void RequestHandler::ParseRequestBus(const Request& rq) const {
+    using namespace std::literals;
+    //std::stringstream ss;
     const auto [route_name, stops_count, stops_unique, distance_real, curvature] = tc_.GetBusRouteInfo(rq.name);
-    std::cout << "\t{\n";
-    std::cout << "\t\t\"request_id\" : " << rq.request_id << ',' << std::endl;
     if (route_name.empty()) {
-        std::cout << "\t\t\"error_message\" : " << "\"not found\"" << std::endl;
+        json::Print(
+            json::Document{
+                json::Builder{}
+                .StartDict()
+                .Key("request_id"s).Value(rq.request_id)
+                .Key("error_message"s).Value("not found"s)
+                .EndDict()
+                .Build()
+            }, std::cout
+        );
     }
-    else {
-        //out << std::setprecision(6);
-        std::cout << "\t\t\"curvature\" : " << curvature << ',' << std::endl
-            << "\t\t\"unique_stop_count\" : " << stops_unique << ',' << std::endl
-            << "\t\t\"stop_count\" : " << stops_count << ',' << std::endl
-            << "\t\t\"route_length\" : " << distance_real << std::endl;
+    else
+    {
+        json::Print(
+            json::Document{
+                json::Builder{}
+                .StartDict()
+                .Key("request_id"s).Value(rq.request_id)
+                .Key("curvature"s).Value(curvature)
+                .Key("unique_stop_count"s).Value(static_cast<int>(stops_unique))
+                .Key("stop_count"s).Value(static_cast<int>(stops_count))
+                .Key("route_length"s).Value(distance_real)
+                .EndDict()
+                .Build()
+            }, std::cout
+        );
     }
-    std::cout << "\n\t}";
 }
 void RequestHandler::ParseRequestStop(const Request& rq) const {
+    using namespace std::literals;
+    //std::stringstream ss;
     const auto [name, routes] = tc_.GetStopInfo(rq.name);
-    std::cout << "\t{\n";
-    std::cout << "\t\t\"request_id\" : " << rq.request_id << ',' << std::endl;
     if (name.empty()) {
-        std::cout << "\t\t\"error_message\" : " << "\"not found\"" << std::endl;
+        json::Print(
+            json::Document{
+                json::Builder{}
+                .StartDict()
+                .Key("request_id"s).Value(rq.request_id)
+                .Key("error_message"s).Value("not found"s)
+                .EndDict()
+                .Build()
+            }, std::cout
+        );
     }
-    else if (routes.empty()) {
-        std::cout << "\t\t\"buses\" : " << "[]" << std::endl;
+    else if(routes.empty())
+    {
+        json::Print(
+            json::Document{
+                json::Builder{}
+                .StartDict()
+                .Key("request_id"s).Value(rq.request_id)
+                .Key("buses"s)
+                    .StartArray()
+                    .EndArray()
+                .EndDict()
+                .Build()
+            }, std::cout
+        );
     }
-    else {
-        std::cout << "\t\t\"buses\" : " << "[";
-        bool space = false;
+    else
+    {
+        json::Array arr;
+        //bool space = false;
         for (const auto bus : routes) {
-            if (space) {
-                std::cout << ", ";
-            }
-            std::cout << "\"" << bus << "\"";
-            space = true;
+            //if (space) {
+                //std::cout << ", ";
+            //}
+            //space = true;
+            arr.push_back(std::string(bus));
+            //ss << bus;
         }
-        std::cout << "]" << std::endl;
+        //json::Node buses = json::Load(ss);
+        json::Print(
+            json::Document{
+                json::Builder{}
+                .StartDict()
+                .Key("request_id"s).Value(rq.request_id)
+                .Key("buses"s)
+                //.StartArray()
+                //.Value(ss.str())
+                .Value(arr)
+                //.EndArray()
+                .EndDict()
+                .Build()
+            }, std::cout
+        );
     }
-    std::cout << "\n\t}" << std::endl;
+
 }
 
 void RequestHandler::ParseRequestMap(const Request& rq) const {
-    
-    json::Document doc = renderer_.GetMap(tc_.GetBuses());
-
+    using namespace std::literals;
+    //json::Document doc = renderer_.GetMap(tc_.GetBuses());
+    json::Document doc = renderer_.GetMap(tc_.GetBuses(), rq.request_id);
+    json::Print(doc, std::cout);
+    /*
     std::cout << "\t{\n";
     std::cout << "\t\t\"request_id\" : " << rq.request_id << ',' << std::endl;
     std::cout << "\t\t\"map\" : ";
     json::Print(doc, std::cout);
     std::cout << "\n\t}" << std::endl;
+    */
 }

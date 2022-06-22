@@ -18,7 +18,7 @@
 #include "geo.h"
 #include "domain.h"
 #include "svg.h"
-#include "json.h"
+#include "json_builder.h"
 
 
 namespace renderer {
@@ -61,7 +61,7 @@ public:
 
     void PrintMap(const std::deque<Bus>& routes);
 
-    json::Document GetMap(const std::deque<Bus>& routes) ;
+    json::Document GetMap(const std::deque<Bus>& routes, int id) ;
 
 private:
     std::vector<svg::Polyline> GetRouteLine(std::vector<const Bus*>& routes, const SphereProjector& proj) ;
