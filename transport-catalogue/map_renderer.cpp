@@ -27,7 +27,6 @@ std::vector<svg::Polyline> RendererMap::GetRouteLine(std::vector<const Bus*>& ro
     bool first_color = true;
     for (const Bus* bus : routes) {
         if (bus->routes.size() == 0) continue;
-        //svg::Color stroke_color = rs_.color_palette.size() >= color_index ? rs_.color_palette[color_index = 0] : rs_.color_palette[color_index++];
         svg::Color stroke_color = (first_color) ? rs_.GetNextColorFromColorPalette(first_color) : rs_.GetNextColorFromColorPalette();
         first_color = false;
         svg::Polyline polyline;
@@ -224,9 +223,8 @@ void RendererMap::ParseOut(const std::deque<Bus>& routes) {
 
 json::Document RendererMap::GetMap(const std::deque<Bus>& routes, int id) {
     using namespace std::literals;
-    std::stringstream ss;//, to_node;
+    std::stringstream ss;
     ParseOut(routes);
-    //to_node << "\"";
     doc_.Render(ss);
     return json::Document{
             json::Builder{}
@@ -236,32 +234,6 @@ json::Document RendererMap::GetMap(const std::deque<Bus>& routes, int id) {
             .EndDict()
             .Build()
     };
-    /*
-    for (const auto ch : ss.str()) {
-        switch (ch) {
-        case '\"':
-            to_node << "\\\"";
-            break;
-        case '\\':
-            to_node << "\\\\";
-            break;
-        case '\n':
-            to_node << "\\n";
-            break;
-        case '\r':
-            to_node << "\\r";
-            break;
-        case '\t':
-            to_node << "\t";
-            break;
-        default:
-            to_node << ch;
-        }
-    }
-    to_node << "\"";
-    json::Document doc = json::Load(to_node);
-    return doc;
-    */
 }
 
 void RendererMap::PrintMap(const std::deque<Bus>& routes) {

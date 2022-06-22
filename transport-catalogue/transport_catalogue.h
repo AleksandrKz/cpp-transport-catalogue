@@ -48,11 +48,6 @@ private:
     std::deque<Bus> buses;
     std::unordered_map<std::string_view, const Bus*> busname_to_bus;
     //-----------------------------------------------------------------------
-
-    //статистика по маршрутам
-    //std::deque<BusStat> bus_stat;
-    //статистика по остановкам
-    //std::deque<BusPtr> stop_stat;
 };
 
 
