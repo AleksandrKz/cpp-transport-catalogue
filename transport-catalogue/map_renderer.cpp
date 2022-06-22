@@ -87,7 +87,6 @@ std::vector<svg::Text> RendererMap::GetRouteName(std::vector<const Bus*>& routes
         //есди маршрут не кольцевой, то отмечаем вторую конечную
         if (bus->type == RouteType::DIRECT && (bus->routes[0]->stop_name != bus->routes[bus->routes.size()-1]->stop_name)) {
             auto end_stop = bus->routes.rbegin();
-            //if ((*end_stop)->stop_name == bus->routes[0]->stop_name) break;
             svg::Text txf = bus_text_front;
             txf.SetPosition(proj({ (*end_stop)->latitude, (*end_stop)->longitude }));
             svg::Text txb = bus_text_back;
@@ -95,8 +94,6 @@ std::vector<svg::Text> RendererMap::GetRouteName(std::vector<const Bus*>& routes
             result.push_back(txb);
             result.push_back(txf);
         }
-
-        //result.push_back(polyline);
     }
 
     return result;
@@ -127,7 +124,6 @@ std::vector<svg::Circle> RendererMap::GetRoutePoint(std::vector<const Bus*>& rou
     //---------
 
     for (const Stop* stop : all_stops) {
-        //svg::Circle circle;
         circle.SetCenter(proj({ stop->latitude, stop->longitude }));
         result.push_back(circle);
     }
