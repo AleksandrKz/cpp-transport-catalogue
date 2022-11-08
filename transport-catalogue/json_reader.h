@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "transport_catalogue.h"
+#include "transport_router.h"
 #include "request_handler.h"
 #include "json.h"
 #include "map_renderer.h"
@@ -35,11 +36,13 @@ struct Bus {
 
 class Reader {
 public:
-    explicit Reader(TransportCatalogue& tc, renderer::RendererMap& rm, RequestHandler& rh);
+    explicit Reader(TransportCatalogue& tc, TransportRouter& tr, renderer::RendererMap& rm, RequestHandler& rh);
 
     void ReadData(std::istream& input);
 
     std::vector<Bus> GetBuses();
+
+    RoutingSettings GetRoutingSettings() const;
 
 private:
     //для каталога
@@ -52,11 +55,18 @@ private:
     //для map renderer
     void ParseRendererSettigs(const Node& n);
 
+    //для routing settings
+    void ParseRoutingSettings(const Node& n);
+
     //для каталога
     std::vector<Stop> stops_;
     std::vector<Bus> buses_routes_;
 
+    //настройки routing_settings
+    RoutingSettings routing_settings_;
+
     TransportCatalogue& tc_;
+    TransportRouter& tr_;
     renderer::RendererMap& rm_;
     RequestHandler& rh_;
 };
