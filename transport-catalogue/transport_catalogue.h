@@ -30,23 +30,26 @@ public:
     const Stop* SearchStop(std::string_view stop_name) const;
     const BusRouteInfo  GetBusRouteInfo(std::string_view route_name) const;
     const StopInfo GetStopInfo(std::string_view stop_name) const;
-    uint64_t GetRealDistance(std::pair<const Stop *, const Stop *> stops_pair);
+    uint64_t GetRealDistance(const Stop* from, const Stop* to) const;
 
     const std::deque<Bus>& GetBuses() const;
+
+    const std::unordered_map<std::string_view, const Stop*>& GetAllStops() const;
+    const std::unordered_map<std::string_view, const Bus*>& GetAllBuses() const;
 
 private:
     //дорожное расстояние
     std::unordered_map<std::pair<const Stop *, const Stop *>, uint64_t, DistanceHasher> real_distance_between_;
     //-----------------------------------------------------------------------
     //автобусные остановки
-    std::deque<Stop> stops;
-    std::unordered_map<std::string_view,const Stop*> stopname_to_stop;
-    //------------------------------------------------------------------------
+    std::deque<Stop> stops_;
+    std::unordered_map<std::string_view,const Stop*> stopname_to_stop_;
+    //-----------------------------------------------------------------------
 
     //-----------------------------------------------------------------------
     //автобусные маршруты
-    std::deque<Bus> buses;
-    std::unordered_map<std::string_view, const Bus*> busname_to_bus;
+    std::deque<Bus> buses_;
+    std::unordered_map<std::string_view, const Bus*> busname_to_bus_;
     //-----------------------------------------------------------------------
 };
 
