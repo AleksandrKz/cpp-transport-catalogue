@@ -15,7 +15,16 @@ Bus::Bus(std::string bus_name, std::vector<std::string> routes, bool is_roundtri
     is_roundtrip(is_roundtrip) {
 }
 
-Reader::Reader(TransportCatalogue& tc, renderer::RendererMap& rm, RequestHandler& rh) : tc_(tc), rm_(rm), rh_(rh) {
+Reader::Reader(TransportCatalogue& tc, TransportRouter& tr, renderer::RendererMap& rm, RequestHandler& rh) : tc_(tc), tr_(tr), rm_(rm), rh_(rh) {
+}
+
+RoutingSettings Reader::GetRoutingSettings() const {
+    return routing_settings_;
+}
+
+void Reader::ParseRoutingSettings(const Node& n) {
+    routing_settings_.bus_velocity = n.AsDict().at("bus_velocity").AsDouble();
+    routing_settings_.bus_wait_time = n.AsDict().at("bus_wait_time").AsInt();
 }
 
 std::vector<ReaderJson::Bus> Reader::GetBuses() {
@@ -84,12 +93,13 @@ void Reader::ParseRendererSettigs(const Node& n) {
 void Reader::ParseStatRequest(const Node& n) {
     for (const auto& node : n.AsArray()) {
         if (node.AsDict().at("type").AsString() == "Stop") {
-            rh_.AddToRequest({"Stop", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt()});
+            rh_.AddToRequest({ "Stop", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt(), {} });
         } else if (node.AsDict().at("type").AsString() == "Bus") {
-            rh_.AddToRequest({ "Bus", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt() });
+            rh_.AddToRequest({ "Bus", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt(), {} });
         } else if (node.AsDict().at("type").AsString() == "Map") {
-            rh_.AddToRequest({ "Map", "", node.AsDict().at("id").AsInt() });
-        }
+            rh_.AddToRequest({ "Map", "", node.AsDict().at("id").AsInt(), {} });
+        } else if (node.AsDict().at("type").AsString() == "Route")
+            rh_.AddToRequest({ "Route", "", node.AsDict().at("id").AsInt(), {node.AsDict().at("from").AsString(), node.AsDict().at("to").AsString()}});
     }
 }
 
@@ -120,6 +130,7 @@ void Reader::ReadData(std::istream& input) {
     Node base_requests;
     Node stat_requests;
     Node render_settings;
+    Node routing_settings;
     for (const auto& [key, node] : data.AsDict()) {
         if (key == "base_requests") {
             base_requests = node;
@@ -129,6 +140,10 @@ void Reader::ReadData(std::istream& input) {
         }
         else if (key == "stat_requests") {
             stat_requests = node;
+        }
+        else if (key == "routing_settings")
+        {
+            routing_settings = node;
         }
         else
         {
@@ -166,6 +181,11 @@ void Reader::ReadData(std::istream& input) {
 
     //статистика
     ParseStatRequest(stat_requests);
+
+    //читаем настройки роутинга и устанавливаем, строим граф
+    ParseRoutingSettings(routing_settings);
+    tr_.SetSettings(routing_settings_);
+    tr_.BuildGraph();
 }
 
 } // namespace Reader
