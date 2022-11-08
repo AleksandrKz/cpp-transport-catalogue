@@ -8,7 +8,7 @@ void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string>
     std::unordered_set<std::string_view> unique_stops;
     std::vector<const Stop*> routes;
     for(const auto& stop_name : bus_routes) {
-        const Stop* stop = stopname_to_stop.at(stop_name);
+        const Stop* stop = stopname_to_stop_.at(stop_name);
         unique_stops.insert(stop->stop_name);
         routes.push_back(stop);
     }
@@ -25,43 +25,39 @@ void TransportCatalogue::AddRoute(std::string bus_name, std::vector<std::string>
     double distance_real = 0.;
     for(size_t i = 0; i < routes.size(); ++i){
         if(i + 1 == routes.size()) break;
-        auto dist = GetRealDistance({stopname_to_stop[routes[i]->stop_name] , stopname_to_stop[routes[i+1]->stop_name]}) != 0 ?
-            GetRealDistance({stopname_to_stop[routes[i]->stop_name] , stopname_to_stop[routes[i+1]->stop_name]}) : 
-            GetRealDistance({stopname_to_stop[routes[i+1]->stop_name] , stopname_to_stop[routes[i]->stop_name]});
+        auto dist = GetRealDistance(stopname_to_stop_[routes[i]->stop_name], stopname_to_stop_[routes[i + 1]->stop_name]);
         distance_real += dist;
     }
     //если маршрут прямой, то проходим ещё в обратную сторону
     if (type == RouteType::DIRECT) {
         for(size_t i = 0; i < routes.size(); ++i){
             if(i + 1 == routes.size()) break;
-            auto dist = GetRealDistance({stopname_to_stop[routes[i+1]->stop_name] , stopname_to_stop[routes[i]->stop_name]}) != 0 ?
-                GetRealDistance({stopname_to_stop[routes[i+1]->stop_name] , stopname_to_stop[routes[i]->stop_name]}) : 
-                GetRealDistance({stopname_to_stop[routes[i]->stop_name] , stopname_to_stop[routes[i+1]->stop_name]});
+            auto dist = GetRealDistance(stopname_to_stop_[routes[i + 1]->stop_name] , stopname_to_stop_[routes[i]->stop_name]);
             distance_real += dist;
         }
     }
 
     uint64_t stops_count = (type == RouteType::RING) ? (routes.size()) : (routes.size() * 2 - 1);
-    buses.push_back(Bus(bus_name, routes, type, stops_count, unique_stops.size(), distance_geo, distance_real));
-    Bus* bus = &buses.back();
-    busname_to_bus[bus->bus_name] = bus;
+    buses_.push_back(Bus(bus_name, routes, type, stops_count, unique_stops.size(), distance_geo, distance_real));
+    Bus* bus = &buses_.back();
+    busname_to_bus_[bus->bus_name] = bus;
 }
 
 void TransportCatalogue::AddStop(std::string stop_name, double latitude, double longitude) {
-    stops.push_back(Stop(stop_name, latitude, longitude));
-    Stop* stop = &stops.back();
-    stopname_to_stop[stop->stop_name] = stop;
+    stops_.push_back(Stop(stop_name, latitude, longitude));
+    Stop* stop = &stops_.back();
+    stopname_to_stop_[stop->stop_name] = stop;
 }
 
 const Bus* TransportCatalogue::SearchRoute(std::string_view route_name) const {
-    if(busname_to_bus.count(route_name))
-        return busname_to_bus.at(route_name);
+    if(busname_to_bus_.count(route_name))
+        return busname_to_bus_.at(route_name);
     return nullptr;
 }
 
 const Stop* TransportCatalogue::SearchStop(std::string_view stop_name) const {
-    if(stopname_to_stop.count(stop_name))
-        return stopname_to_stop.at(stop_name);
+    if(stopname_to_stop_.count(stop_name))
+        return stopname_to_stop_.at(stop_name);
     return nullptr;
 }
 
@@ -87,7 +83,7 @@ const StopInfo TransportCatalogue::GetStopInfo(std::string_view stop_name) const
         return {"", buses_in_stop};
     }
 
-    for (const Bus& e : buses) {
+    for (const Bus& e : buses_) {
         if (std::find_if(e.routes.begin(), e.routes.end(), [stop_name](const Stop* stop){
             if (stop->stop_name == stop_name)
                 return true;
@@ -100,16 +96,28 @@ const StopInfo TransportCatalogue::GetStopInfo(std::string_view stop_name) const
 }
 
 void TransportCatalogue::AddRealDistance(std::string_view from, std::string_view to, uint64_t distance) {
-    real_distance_between_[{stopname_to_stop[from], stopname_to_stop[to]}] = distance;
+    real_distance_between_[{stopname_to_stop_[from], stopname_to_stop_[to]}] = distance;
 }
 
-uint64_t TransportCatalogue::GetRealDistance(std::pair<const Stop *, const Stop *> stops_pair) {
-    if (real_distance_between_.count(stops_pair)) {
-        return real_distance_between_[stops_pair];
+uint64_t TransportCatalogue::GetRealDistance(const Stop* from, const Stop* to) const {
+    if (real_distance_between_.count({from, to})) {
+        return real_distance_between_.at({ from, to });
     }
+    else if (real_distance_between_.count({ to, from })) {
+        return real_distance_between_.at({ to, from });
+    }
+    else
     return 0;
 }
 
 const std::deque<Bus>& TransportCatalogue::GetBuses() const {
-    return buses;
+    return buses_;
+}
+
+const std::unordered_map<std::string_view, const Stop*>& TransportCatalogue::GetAllStops() const {
+    return stopname_to_stop_;
+}
+
+const std::unordered_map<std::string_view, const Bus*>& TransportCatalogue::GetAllBuses() const {
+    return busname_to_bus_;
 }
