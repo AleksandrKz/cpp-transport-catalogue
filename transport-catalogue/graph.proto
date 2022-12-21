@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package serialize;
+
+message Edge {
+    string name = 1;
+    uint64 quality = 2;
+    uint64 from = 3;
+    uint64 to = 4;
+    double weight = 5;
+}
+
+message Vertex {
+    repeated uint64 edge_id = 1;
+}
+
+message Graph {
+    repeated Edge edge = 1;
+    repeated Vertex vertex = 2;
+}
