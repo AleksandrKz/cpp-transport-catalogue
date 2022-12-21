@@ -31,11 +31,10 @@ public:
     const BusRouteInfo  GetBusRouteInfo(std::string_view route_name) const;
     const StopInfo GetStopInfo(std::string_view stop_name) const;
     uint64_t GetRealDistance(const Stop* from, const Stop* to) const;
-
     const std::deque<Bus>& GetBuses() const;
-
     const std::unordered_map<std::string_view, const Stop*>& GetAllStops() const;
     const std::unordered_map<std::string_view, const Bus*>& GetAllBuses() const;
+    const std::unordered_map<std::pair<const Stop*, const Stop*>, uint64_t, DistanceHasher>& GetAllDistance() const;
 
 private:
     //дорожное расстояние

@@ -2,7 +2,6 @@
 
 #include <sstream>
 #include <iostream>
-#include <istream>
 
 #include <cstdint>
 #include <string>
@@ -36,13 +35,18 @@ struct Bus {
 
 class Reader {
 public:
-    explicit Reader(TransportCatalogue& tc, TransportRouter& tr, renderer::RendererMap& rm, RequestHandler& rh);
+    explicit Reader(std::istream& input);
 
     void ReadData(std::istream& input);
+
+    void FillCatalogue(TransportCatalogue& tc);
+    void FillRequest(RequestHandler& rq);
 
     std::vector<Bus> GetBuses();
 
     RoutingSettings GetRoutingSettings() const;
+    const renderer::RenderSettings& GetRendererSettings() const;
+    SerializationSettings GetSerializationSettings() const;
 
 private:
     //для каталога
@@ -58,17 +62,24 @@ private:
     //для routing settings
     void ParseRoutingSettings(const Node& n);
 
+    //для serialization settings
+    void ParseSerializationSettings(const Node& n);
+
     //для каталога
     std::vector<Stop> stops_;
     std::vector<Bus> buses_routes_;
 
+    //запросы
+    std::vector<Request> request_;
+
+    //настройки рендера
+    renderer::RenderSettings render_settings_;
+
     //настройки routing_settings
     RoutingSettings routing_settings_;
 
-    TransportCatalogue& tc_;
-    TransportRouter& tr_;
-    renderer::RendererMap& rm_;
-    RequestHandler& rh_;
+    //настройки SerializationSettings
+    SerializationSettings serialization_settings_;
 };
 
 } // namespace Reader

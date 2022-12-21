@@ -58,6 +58,7 @@ public:
     void ParseOut(const std::deque<Bus>& routes) ;
 
     void SetRendererSettings(RenderSettings rs);
+    const RenderSettings& GetRendererSettings() const;
 
     void PrintMap(const std::deque<Bus>& routes);
 
@@ -87,7 +88,7 @@ public:
         // Если точки поверхности сферы не заданы, вычислять нечего
         if (points_begin == points_end) {
             return;
-            }
+        }
 
         // Находим точки с минимальной и максимальной долготой
         const auto [left_it, right_it] = std::minmax_element(

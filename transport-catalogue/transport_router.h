@@ -1,7 +1,5 @@
 #pragma once
 
-//#include <iomanip>
-
 #include <optional>
 #include <string>
 #include <string_view>
@@ -16,19 +14,18 @@
 class TransportRouter
 {
 public:
-	TransportRouter() = default;
-	explicit TransportRouter(const TransportCatalogue& tc);
-	explicit TransportRouter(const RoutingSettings& rs, const TransportCatalogue& tc);
+	explicit TransportRouter(const TransportCatalogue& tc, const RoutingSettings& rs);
 	~TransportRouter();
-
+	void SetGraph(graph::DirectedWeightedGraph<double>&& graph, std::map<std::string, graph::VertexId>&& stop_ids);
 	void SetSettings(const RoutingSettings& rs);
 	const RoutingSettings GetSettings() const;
+	const std::map<std::string, graph::VertexId>& GetStopIds() const;
+
 	void BuildGraph();
 
 	json::Array GetEdgesItems(const std::vector<graph::EdgeId>& edges) const;
-
 	std::optional<graph::Router<double>::RouteInfo> GetRouteInfo(const Stop* from, const Stop* to) const;
-
+	const graph::DirectedWeightedGraph<double>& GetGraph() const;
 
 private:
 	double GetTravelTime(double way);

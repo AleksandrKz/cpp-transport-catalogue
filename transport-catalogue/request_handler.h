@@ -8,22 +8,12 @@
 #include "json_builder.h"
 #include "json.h"
 
-struct RouteFromTo {
-    std::string from;
-    std::string to;
-};
-
-struct Request {
-    std::string type;
-    std::string name;
-    int request_id;
-    RouteFromTo route;
-};
-
 class RequestHandler {
 public:
-    RequestHandler(const TransportCatalogue& tc, const TransportRouter& tr, renderer::RendererMap& renderer);
+    RequestHandler(const TransportCatalogue& tc, renderer::RendererMap& renderer, const TransportRouter& tr);
+
     void AddToRequest(Request&& rq);
+    void AddAllRequest(std::vector<Request>&& rq);
     void PrintStat();
 
 private:
