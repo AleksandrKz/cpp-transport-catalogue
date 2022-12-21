@@ -42,7 +42,6 @@ namespace graph {
         const Edge<Weight>& GetEdge(EdgeId edge_id) const; //вернуть ребро по id
         IncidentEdgesRange GetIncidentEdges(VertexId vertex) const; // вернуть итератор на ребро
 
-        //const std::vector<Edge<Weight>>& GetEdgTest() const { return edges_; }
         void ResizeGraph(size_t vertex_count);
 
     private:
