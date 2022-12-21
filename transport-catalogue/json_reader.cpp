@@ -15,11 +15,41 @@ Bus::Bus(std::string bus_name, std::vector<std::string> routes, bool is_roundtri
     is_roundtrip(is_roundtrip) {
 }
 
-Reader::Reader(TransportCatalogue& tc, TransportRouter& tr, renderer::RendererMap& rm, RequestHandler& rh) : tc_(tc), tr_(tr), rm_(rm), rh_(rh) {
+Reader::Reader(std::istream& input) {
+    ReadData(input);
+}
+
+void Reader::FillCatalogue(TransportCatalogue& tc) {
+    //вбиваем инфу по остановкам
+    for (const auto& e : stops_) {
+        tc.AddStop(e.stop_name, e.latitude, e.longitude);
+    }
+    //добавляем инфу по дорожному расстоянию меж остановками
+    for (const auto& e : stops_) {
+        for (const auto& [name_stop, dist] : e.real_distance_to_stop) {
+            tc.AddRealDistance(e.stop_name, name_stop, dist);
+        }
+    }
+    //вбиваем информацию  по маршрутам
+    for (const auto& e : buses_routes_) {
+        tc.AddRoute(e.bus_name, e.routes, e.is_roundtrip);
+    }
+}
+
+void Reader::FillRequest(RequestHandler& rq) {
+    rq.AddAllRequest(std::move(request_));
 }
 
 RoutingSettings Reader::GetRoutingSettings() const {
     return routing_settings_;
+}
+
+const renderer::RenderSettings& Reader::GetRendererSettings() const {
+    return render_settings_;
+}
+
+SerializationSettings Reader::GetSerializationSettings() const {
+    return serialization_settings_;
 }
 
 void Reader::ParseRoutingSettings(const Node& n) {
@@ -32,74 +62,74 @@ std::vector<ReaderJson::Bus> Reader::GetBuses() {
 }
 
 void Reader::ParseRendererSettigs(const Node& n) {
-    renderer::RenderSettings rs;
-    
-    rs.width = n.AsDict().at("width").AsDouble();
-    rs.height = n.AsDict().at("height").AsDouble();
-    rs.padding = n.AsDict().at("padding").AsDouble();
-    rs.line_width = n.AsDict().at("line_width").AsDouble();
-    rs.stop_radius = n.AsDict().at("stop_radius").AsDouble();
-    rs.bus_label_font_size = n.AsDict().at("bus_label_font_size").AsInt();
-    rs.bus_label_offset.x = n.AsDict().at("bus_label_offset").AsArray()[0].AsDouble();
-    rs.bus_label_offset.y = n.AsDict().at("bus_label_offset").AsArray()[1].AsDouble();
-    rs.stop_label_font_size = n.AsDict().at("stop_label_font_size").AsInt();
-    rs.stop_label_offset.x = n.AsDict().at("stop_label_offset").AsArray()[0].AsDouble();
-    rs.stop_label_offset.y = n.AsDict().at("stop_label_offset").AsArray()[1].AsDouble();
+    render_settings_.width = n.AsDict().at("width").AsDouble();
+    render_settings_.height = n.AsDict().at("height").AsDouble();
+    render_settings_.padding = n.AsDict().at("padding").AsDouble();
+    render_settings_.line_width = n.AsDict().at("line_width").AsDouble();
+    render_settings_.stop_radius = n.AsDict().at("stop_radius").AsDouble();
+    render_settings_.bus_label_font_size = n.AsDict().at("bus_label_font_size").AsInt();
+    render_settings_.bus_label_offset.x = n.AsDict().at("bus_label_offset").AsArray()[0].AsDouble();
+    render_settings_.bus_label_offset.y = n.AsDict().at("bus_label_offset").AsArray()[1].AsDouble();
+    render_settings_.stop_label_font_size = n.AsDict().at("stop_label_font_size").AsInt();
+    render_settings_.stop_label_offset.x = n.AsDict().at("stop_label_offset").AsArray()[0].AsDouble();
+    render_settings_.stop_label_offset.y = n.AsDict().at("stop_label_offset").AsArray()[1].AsDouble();
     if (n.AsDict().at("underlayer_color").IsString()) {
-        rs.underlayer_color = n.AsDict().at("underlayer_color").AsString();
+        render_settings_.underlayer_color = n.AsDict().at("underlayer_color").AsString();
     }
     else if (n.AsDict().at("underlayer_color").IsArray()) {
         if (n.AsDict().at("underlayer_color").AsArray().size() == 3) {
             uint8_t r = n.AsDict().at("underlayer_color").AsArray()[0].AsInt();
             uint8_t g = n.AsDict().at("underlayer_color").AsArray()[1].AsInt();
             uint8_t b = n.AsDict().at("underlayer_color").AsArray()[2].AsInt();
-            rs.underlayer_color = svg::Color(svg::Rgb(r, g, b));
+            render_settings_.underlayer_color = svg::Color(svg::Rgb(r, g, b));
         }
         else {
             uint8_t r = n.AsDict().at("underlayer_color").AsArray()[0].AsInt();
             uint8_t g = n.AsDict().at("underlayer_color").AsArray()[1].AsInt();
             uint8_t b = n.AsDict().at("underlayer_color").AsArray()[2].AsInt();
             double a = n.AsDict().at("underlayer_color").AsArray()[3].AsDouble();
-            rs.underlayer_color = svg::Color(svg::Rgba(r, g, b, a));
+            render_settings_.underlayer_color = svg::Color(svg::Rgba(r, g, b, a));
         }
     }
 
-    rs.underlayer_width = n.AsDict().at("underlayer_width").AsDouble();
+    render_settings_.underlayer_width = n.AsDict().at("underlayer_width").AsDouble();
 
     for (const auto& col : n.AsDict().at("color_palette").AsArray()) {
         if (col.IsString()) {
-            rs.color_palette.push_back(svg::Color(col.AsString()));
+            render_settings_.color_palette.push_back(svg::Color(col.AsString()));
         }
         else if (col.IsArray()) {
             if (col.AsArray().size() == 3) {
                 uint8_t r = col.AsArray()[0].AsInt();
                 uint8_t g = col.AsArray()[1].AsInt();
                 uint8_t b = col.AsArray()[2].AsInt();
-                rs.color_palette.push_back(svg::Color(svg::Rgb(r, g, b)));
+                render_settings_.color_palette.push_back(svg::Color(svg::Rgb(r, g, b)));
             }
             else {
                 uint8_t r = col.AsArray()[0].AsInt();
                 uint8_t g = col.AsArray()[1].AsInt();
                 uint8_t b = col.AsArray()[2].AsInt();
                 double a = col.AsArray()[3].AsDouble();
-                rs.color_palette.push_back(svg::Color(svg::Rgba(r, g, b, a)));
+                render_settings_.color_palette.push_back(svg::Color(svg::Rgba(r, g, b, a)));
             }
         }
     }
+}
 
-    rm_.SetRendererSettings(rs);
+void Reader::ParseSerializationSettings(const Node& n) {
+    serialization_settings_.file_name = n.AsDict().at("file").AsString();
 }
 
 void Reader::ParseStatRequest(const Node& n) {
     for (const auto& node : n.AsArray()) {
         if (node.AsDict().at("type").AsString() == "Stop") {
-            rh_.AddToRequest({ "Stop", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt(), {} });
+            request_.push_back({ "Stop", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt(), {} });
         } else if (node.AsDict().at("type").AsString() == "Bus") {
-            rh_.AddToRequest({ "Bus", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt(), {} });
+            request_.push_back({ "Bus", node.AsDict().at("name").AsString(), node.AsDict().at("id").AsInt(), {} });
         } else if (node.AsDict().at("type").AsString() == "Map") {
-            rh_.AddToRequest({ "Map", "", node.AsDict().at("id").AsInt(), {} });
+            request_.push_back({ "Map", "", node.AsDict().at("id").AsInt(), {} });
         } else if (node.AsDict().at("type").AsString() == "Route")
-            rh_.AddToRequest({ "Route", "", node.AsDict().at("id").AsInt(), {node.AsDict().at("from").AsString(), node.AsDict().at("to").AsString()}});
+            request_.push_back({ "Route", "", node.AsDict().at("id").AsInt(), {node.AsDict().at("from").AsString(), node.AsDict().at("to").AsString()}});
     }
 }
 
@@ -131,6 +161,7 @@ void Reader::ReadData(std::istream& input) {
     Node stat_requests;
     Node render_settings;
     Node routing_settings;
+    Node serialization_settings;
     for (const auto& [key, node] : data.AsDict()) {
         if (key == "base_requests") {
             base_requests = node;
@@ -145,6 +176,10 @@ void Reader::ReadData(std::istream& input) {
         {
             routing_settings = node;
         }
+        else if (key == "serialization_settings")
+        {
+            serialization_settings = node;
+        }
         else
         {
             continue;
@@ -152,40 +187,35 @@ void Reader::ReadData(std::istream& input) {
     }
 
     //собираем данные 
-    for (const auto& node : base_requests.AsArray()) {
-        if (node.AsDict().at("type").AsString() == "Stop") {
-            ParseStop(node);
-        } else if (node.AsDict().at("type").AsString() == "Bus") {
-            ParseBusRoute(node);
+    if (!base_requests.IsNull()) {
+        for (const auto& node : base_requests.AsArray()) {
+            if (node.AsDict().at("type").AsString() == "Stop") {
+                ParseStop(node);
+            }
+            else if (node.AsDict().at("type").AsString() == "Bus") {
+                ParseBusRoute(node);
+            }
         }
-    }
-
-    // вбиваем данные в каталог
-    //вбиваем инфу по остановкам
-    for(const auto& e : stops_) {
-        tc_.AddStop(e.stop_name, e.latitude, e.longitude);
-    }
-    //добавляем инфу по дорожному расстоянию меж остановками
-    for(const auto& e : stops_) {
-        for (const auto& [name_stop, dist] : e.real_distance_to_stop) {
-            tc_.AddRealDistance(e.stop_name, name_stop, dist);
-        }
-    }
-    //вбиваем информацию  по маршрутам
-    for(const auto& e : buses_routes_) {
-        tc_.AddRoute(e.bus_name, e.routes, e.is_roundtrip);
     }
 
     //настройки для рендера
-    ParseRendererSettigs(render_settings);
+    if (!render_settings.IsNull()) {
+        ParseRendererSettigs(render_settings);
+    }
 
-    //статистика
-    ParseStatRequest(stat_requests);
+    //настройки для де//сериализации 
+    if (!serialization_settings.IsNull()) {
+        ParseSerializationSettings(serialization_settings);
+    }
 
-    //читаем настройки роутинга и устанавливаем, строим граф
-    ParseRoutingSettings(routing_settings);
-    tr_.SetSettings(routing_settings_);
-    tr_.BuildGraph();
+    //статистика/запросы к tc
+    if (!stat_requests.IsNull()) {
+        ParseStatRequest(stat_requests);
+    }
+
+    //читаем настройки роутинга
+    if (!routing_settings.IsNull()) {
+        ParseRoutingSettings(routing_settings);
+    }
 }
-
 } // namespace Reader

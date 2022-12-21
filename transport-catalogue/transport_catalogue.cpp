@@ -121,3 +121,7 @@ const std::unordered_map<std::string_view, const Stop*>& TransportCatalogue::Get
 const std::unordered_map<std::string_view, const Bus*>& TransportCatalogue::GetAllBuses() const {
     return busname_to_bus_;
 }
+
+const std::unordered_map<std::pair<const Stop*, const Stop*>, uint64_t, DistanceHasher>& TransportCatalogue::GetAllDistance() const {
+    return real_distance_between_;
+}

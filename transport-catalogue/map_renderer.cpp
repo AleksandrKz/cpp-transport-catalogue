@@ -22,6 +22,10 @@ void RendererMap::SetRendererSettings(RenderSettings rs) {
     rs_ = std::move(rs);
 }
 
+const RenderSettings& RendererMap::GetRendererSettings() const {
+    return rs_;
+}
+
 std::vector<svg::Polyline> RendererMap::GetRouteLine(std::vector<const Bus*>& routes, const SphereProjector& proj) {
     std::vector<svg::Polyline> result;
     bool first_color = true;
@@ -169,7 +173,6 @@ std::vector<svg::Text> RendererMap::GetStopsName(std::vector<const Bus*>& routes
     stop_text_front.SetFillColor("black");
     //---------
 
-    //for (auto it = all_stops.begin(); it != last; ++it) {
     for (const Stop* stop : all_stops) {
         stop_text_back.SetData(stop->stop_name);
         stop_text_front.SetData(stop->stop_name);

@@ -1,21 +1,26 @@
 #include "request_handler.h"
 
-RequestHandler::RequestHandler(const TransportCatalogue& tc, const TransportRouter& tr, renderer::RendererMap& renderer) : tc_(tc), tr_(tr), renderer_(renderer) {
-}
+RequestHandler::RequestHandler(const TransportCatalogue& tc, renderer::RendererMap& renderer, const TransportRouter& tr) :
+    tc_(tc), tr_(tr), renderer_(renderer) 
+{}
 
 
 void RequestHandler::AddToRequest(Request&& rq) {
     request_.push_back(rq);
 }
 
+void RequestHandler::AddAllRequest(std::vector<Request>&& rq) {
+    request_ = rq;
+}
+
 void RequestHandler::PrintStat() {
     std::cout << "[\n";
-    bool space = false;
+    bool koma = false;
     for (const Request& req : request_) {
-        if (space) {
-            std::cout << ',';
+        if (koma) {
+            std::cout << ',' << '\n';
         }
-        space = true;
+        koma = true;
         if (req.type == "Bus")
             ParseRequestBus(req);
         else if (req.type == "Stop")
@@ -60,6 +65,7 @@ void RequestHandler::ParseRequestBus(const Request& rq) const {
         );
     }
 }
+
 void RequestHandler::ParseRequestStop(const Request& rq) const {
     using namespace std::literals;
     const auto [name, routes] = tc_.GetStopInfo(rq.name);
@@ -108,7 +114,6 @@ void RequestHandler::ParseRequestStop(const Request& rq) const {
             }, std::cout
         );
     }
-
 }
 
 void RequestHandler::ParseRequestMap(const Request& rq) const {

@@ -1,9 +1,6 @@
 #include "transport_router.h"
 
-TransportRouter::TransportRouter(const TransportCatalogue& tc) : tc_(tc) {
-}
-
-TransportRouter::TransportRouter(const RoutingSettings& rs, const TransportCatalogue& tc) : tc_(tc)
+TransportRouter::TransportRouter(const TransportCatalogue& tc, const RoutingSettings& rs) : tc_(tc)
 {
 	SetSettings(rs);
 }
@@ -18,8 +15,18 @@ void TransportRouter::SetSettings(const RoutingSettings& rs) {
 	bus_velocity_ = rs.bus_velocity;
 }
 
+void TransportRouter::SetGraph(graph::DirectedWeightedGraph<double>&& graph, std::map<std::string, graph::VertexId>&& stop_ids) {
+    graph_ = std::move(graph);
+    stop_ids_ = std::move(stop_ids);
+    router_ptr_ = new graph::Router<double>(graph_);
+}
+
 const RoutingSettings TransportRouter::GetSettings() const {
     return {bus_wait_time_, bus_velocity_};
+}
+
+const std::map<std::string, graph::VertexId>& TransportRouter::GetStopIds() const {
+    return stop_ids_;
 }
 
 void TransportRouter::BuildGraph() {
@@ -105,7 +112,13 @@ std::optional<graph::Router<double>::RouteInfo> TransportRouter::GetRouteInfo(co
     return router_ptr_->BuildRoute(stop_ids_.at(from->stop_name), stop_ids_.at(to->stop_name));
 }
 
-double TransportRouter::GetTravelTime(double way) 
+const graph::DirectedWeightedGraph<double>& TransportRouter::GetGraph() const {
+    return graph_;
+}
+
+double TransportRouter::GetTravelTime(double way)
 {
-    return way / (bus_velocity_ * (100.0 / 6.0));
+    const double min_in_hour = 60.;
+    const double m_in_km = 1000.;
+    return (way  / (bus_velocity_ * m_in_km) * min_in_hour);
 }
