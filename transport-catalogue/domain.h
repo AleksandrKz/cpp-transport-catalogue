@@ -43,3 +43,24 @@ struct Bus {
     double distance_real = 0.;
 };
 
+struct RoutingSettings {
+    int bus_wait_time = 1;
+    double bus_velocity = 1.;
+};
+
+struct SerializationSettings
+{
+    std::string file_name;
+};
+
+struct RouteFromTo {
+    std::string from;
+    std::string to;
+};
+
+struct Request {
+    std::string type;
+    std::string name;
+    int request_id;
+    RouteFromTo route;
+};
