@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package serialize;
+
+import "svg.proto";
+
+message RenderSettings {
+	string font_family = 1;
+	string font_weight = 2;
+
+	double width = 3;
+	double height = 4;
+
+	double padding = 5;
+
+	double line_width = 6;
+	double stop_radius = 7;
+
+	uint32 bus_label_font_size = 8;
+	Point bus_label_offset = 9;
+
+	uint32 stop_label_font_size = 10;
+	Point stop_label_offset = 11;
+
+	Color underlayer_color = 12;
+	double underlayer_width = 13;
+	repeated Color color_palette = 14;
+}
